@@ -23,6 +23,14 @@ bool eventTriggered(double interval) {
     return false;
 }
 
+bool elementInDeque(Vector2 element, const deque<Vector2> &deque) {
+    for (const auto &i: deque) {
+        if (Vector2Equals(i, element)) return true;
+    }
+    return false;
+}
+
+
 void DrawPoint(int x, int y, Color color) {
     // DrawRectangle( color);
     auto rectangle = Rectangle{float(x * cellSize), float(y * cellSize), float(cellSize), float(cellSize)};
@@ -42,9 +50,13 @@ public:
         }
     }
 
-    void Update() {
-        body.pop_back();
-        body.push_front(Vector2Add(body[0], direction));
+    void Update(Vector2 foodPos) {
+        if (Vector2Equals(foodPos, Vector2Add(body[0], direction))) {
+            body.push_front(Vector2Add(body[0], direction));
+        } else {
+            body.push_front(Vector2Add(body[0], direction));
+            body.pop_back();
+        }
     }
 };
 
@@ -53,11 +65,6 @@ class Food {
 public:
     Vector2 position{};
 
-    Food() {
-        // Seed the random number generator
-        SetRandomSeed(time(nullptr));
-        position = GenerateRandomPos();
-    }
 
     void Draw() const {
         DrawPoint(static_cast<int>(position.x),
@@ -70,21 +77,62 @@ public:
     //                   static_cast<int>(position.y) * cellSize,
     //                   cellSize, cellSize, green);
     // }
-
-    static Vector2 GenerateRandomPos() {
+    static Vector2 GenerateRandomCell() {
         const int x = GetRandomValue(0, cellCount - 1);
         const int y = GetRandomValue(0, cellCount - 1);
+
         return Vector2{static_cast<float>(x), static_cast<float>(y)};
+    }
+
+    static Vector2 GenerateRandomPos(const deque<Vector2> &snakeBody) {
+        Vector2 pos = GenerateRandomCell();
+        while (elementInDeque(pos, snakeBody)) {
+            pos = GenerateRandomCell();
+        }
+        return pos;
     }
 };
 
 
+class Game {
+public:
+    Snake snake;
+    Food food;
+
+    Game() {
+        snake = Snake{};
+        food = Food{};
+        food.position = Food::GenerateRandomPos(snake.body);
+    }
+
+    void Draw() {
+        food.Draw();
+        snake.Draw();
+    }
+
+    void Update() {
+        const auto foodPos = food.position;
+        this->checkSnakeEatable();
+        snake.Update(foodPos);
+
+    }
+
+    void checkSnakeEatable() {
+        if (Vector2Equals(Vector2Add(snake.body[0], snake.direction), food.position)) {
+            cout << "Snake is eating" << endl;
+            food.position = Food::GenerateRandomPos(snake.body);
+        }
+    }
+};
+
 using namespace std;
 
 int main() {
+    // SetRandomSeed(time(nullptr));
     cout << "Starting the game" << endl;
-    auto snake = Snake{};
-    auto food = Food();
+
+    auto game = Game{};
+
     // Create entry screen.
     InitWindow(cellSize * cellCount, cellSize * cellCount, WINDOW_TITLE);
     SetTargetFPS(120);
@@ -100,23 +148,23 @@ int main() {
         ClearBackground(green);
         if (eventTriggered(0.2)) {
             // moving the snake
-            snake.Update();
+            game.Update();
         }
-        if (IsKeyPressed(KEY_UP) && snake.direction.y != 1) {
-            snake.direction = {0, -1};
+        if (IsKeyPressed(KEY_UP) && game.snake.direction.y != 1) {
+            game.snake.direction = {0, -1};
         }
-        if (IsKeyPressed(KEY_DOWN) && snake.direction.y != -1) {
-            snake.direction = {0, 1};
+        if (IsKeyPressed(KEY_DOWN) && game.snake.direction.y != -1) {
+            game.snake.direction = {0, 1};
         }
-        if (IsKeyPressed(KEY_LEFT) && snake.direction.x != 1) {
-            snake.direction = {-1, 0};
+        if (IsKeyPressed(KEY_LEFT) && game.snake.direction.x != 1) {
+            game.snake.direction = {-1, 0};
         }
-        if (IsKeyPressed(KEY_RIGHT) && snake.direction.x != -1) {
-            snake.direction = {1, 0};
+        if (IsKeyPressed(KEY_RIGHT) && game.snake.direction.x != -1) {
+            game.snake.direction = {1, 0};
         }
-        snake.Draw();
-        food.Draw();
 
+
+        game.Draw();
 
         EndDrawing();
     }
