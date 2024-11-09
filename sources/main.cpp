@@ -50,7 +50,20 @@ public:
         }
     }
 
+
     void Update(Vector2 foodPos) {
+        if (body[0].x > static_cast<float>(cellCount - 1)) {
+            body[0].x = 0;
+        }
+        if (body[0].x < 0) {
+            body[0].x = static_cast<float>(cellCount - 1);
+        }
+        if (body[0].y > static_cast<float>(cellCount - 1)) {
+            body[0].y = 0;
+        }
+        if (body[0].y < 0) {
+            body[0].y = static_cast<float>(cellCount - 1);
+        }
         if (Vector2Equals(foodPos, Vector2Add(body[0], direction))) {
             body.push_front(Vector2Add(body[0], direction));
         } else {
@@ -114,7 +127,6 @@ public:
         const auto foodPos = food.position;
         this->checkSnakeEatable();
         snake.Update(foodPos);
-
     }
 
     void checkSnakeEatable() {
