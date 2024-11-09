@@ -5,6 +5,9 @@
 
 #define WINDOW_TITLE "Snake game"
 
+Color green = {173, 204, 96, 255};
+Color darkGreen= {43, 51, 24, 255};
+
 using namespace std;
 
 int main() {
@@ -14,6 +17,19 @@ int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     SetTargetFPS(60);
 
+    // Game loop
+    // 1. Event handling
+    // 2. Updating Positions
+    // 3. Drawing Objects
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+
+        // Drawing
+        ClearBackground(green);
+
+
+        EndDrawing();
+    }
 
     CloseWindow();
 
