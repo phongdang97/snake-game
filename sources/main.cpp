@@ -34,7 +34,9 @@ bool elementInDeque(Vector2 element, const deque<Vector2> &deque) {
 
 void DrawPoint(int x, int y, Color color) {
     // DrawRectangle( color);
-    auto rectangle = Rectangle{float(x * cellSize + offset), float(y * cellSize + offset), float(cellSize), float(cellSize)};
+    auto rectangle = Rectangle{
+        float(x * cellSize + offset), float(y * cellSize + offset), float(cellSize), float(cellSize)
+    };
     DrawRectangleRounded(rectangle, 0.5, 9, color);
 }
 
@@ -53,8 +55,8 @@ public:
 
 
     void Update(Vector2 foodPos) {
-        cout <<"Snake: " << body[0].x << " " << body[0].y << endl;
-        cout <<"Food: " << foodPos.x << " " << foodPos.y << endl;
+        cout << "Snake: " << body[0].x << " " << body[0].y << endl;
+        cout << "Food: " << foodPos.x << " " << foodPos.y << endl;
 
         if (Vector2Equals(foodPos, Vector2Add(body[0], direction))) {
             body.push_front(Vector2Add(body[0], direction));
@@ -146,6 +148,9 @@ using namespace std;
 int main() {
     // SetRandomSeed(time(nullptr));
     cout << "Starting the game" << endl;
+    InitAudioDevice();
+    Music music = LoadMusicStream(ASSETS_PATH"KahootLobbyMusic.mp3");
+    PlayMusicStream(music);
 
     auto game = Game{};
 
@@ -158,6 +163,7 @@ int main() {
     // 2. Updating Positions
     // 3. Drawing Objects
     while (!WindowShouldClose()) {
+        UpdateMusicStream(music);
         BeginDrawing();
 
         // Drawing
@@ -188,7 +194,8 @@ int main() {
 
         EndDrawing();
     }
-
+    UnloadMusicStream(music);
+    CloseAudioDevice();
     CloseWindow();
 
     return 0;
