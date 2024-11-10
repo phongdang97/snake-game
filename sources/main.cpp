@@ -12,6 +12,7 @@ Color darkGreen = {43, 51, 24, 255};
 
 int cellSize = 30;
 int cellCount = 25;
+int offset = 75;
 double lastUpdateTime = 0;
 
 bool eventTriggered(double interval) {
@@ -33,7 +34,7 @@ bool elementInDeque(Vector2 element, const deque<Vector2> &deque) {
 
 void DrawPoint(int x, int y, Color color) {
     // DrawRectangle( color);
-    auto rectangle = Rectangle{float(x * cellSize), float(y * cellSize), float(cellSize), float(cellSize)};
+    auto rectangle = Rectangle{float(x * cellSize + offset), float(y * cellSize + offset), float(cellSize), float(cellSize)};
     DrawRectangleRounded(rectangle, 0.5, 9, color);
 }
 
@@ -52,6 +53,15 @@ public:
 
 
     void Update(Vector2 foodPos) {
+        cout <<"Snake: " << body[0].x << " " << body[0].y << endl;
+        cout <<"Food: " << foodPos.x << " " << foodPos.y << endl;
+
+        if (Vector2Equals(foodPos, Vector2Add(body[0], direction))) {
+            body.push_front(Vector2Add(body[0], direction));
+        } else {
+            body.push_front(Vector2Add(body[0], direction));
+            body.pop_back();
+        }
         if (body[0].x > static_cast<float>(cellCount - 1)) {
             body[0].x = 0;
         }
@@ -63,12 +73,6 @@ public:
         }
         if (body[0].y < 0) {
             body[0].y = static_cast<float>(cellCount - 1);
-        }
-        if (Vector2Equals(foodPos, Vector2Add(body[0], direction))) {
-            body.push_front(Vector2Add(body[0], direction));
-        } else {
-            body.push_front(Vector2Add(body[0], direction));
-            body.pop_back();
         }
     }
 };
@@ -115,7 +119,7 @@ public:
     Game() {
         snake = Snake{};
         food = Food{};
-        food.position = Food::GenerateRandomPos(snake.body);
+        // food.position = Food::GenerateRandomPos(snake.body);
     }
 
     void Draw() {
@@ -146,7 +150,7 @@ int main() {
     auto game = Game{};
 
     // Create entry screen.
-    InitWindow(cellSize * cellCount, cellSize * cellCount, WINDOW_TITLE);
+    InitWindow(cellSize * cellCount + 2 * offset, cellSize * cellCount + 2 * offset, WINDOW_TITLE);
     SetTargetFPS(120);
 
     // Game loop
@@ -175,7 +179,11 @@ int main() {
             game.snake.direction = {1, 0};
         }
 
-
+        DrawRectangleLinesEx(Rectangle{
+                                 (float) offset - 5, (float) offset - 5, (float) cellSize * cellCount + 10,
+                                 (float) cellSize * cellCount + 10
+                             }, 5,
+                             darkGreen);
         game.Draw();
 
         EndDrawing();
