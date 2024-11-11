@@ -154,13 +154,18 @@ public:
     }
 };
 Difficulty ShowDifficultyMenu() {
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+    int textWidth = MeasureText("Select Difficulty", 40);
+    int textX = (screenWidth - textWidth) / 2;
+    int textY = screenHeight / 2 - 100;
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(green);
-        DrawText("Select Difficulty", 400, 200, 40, darkGreen);
-        DrawText("1 - Easy", 400, 300, 30, darkGreen);
-        DrawText("2 - Medium", 400, 350, 30, darkGreen);
-        DrawText("3 - Hard", 400, 400, 30, darkGreen);
+        DrawText("Select Difficulty", textX, textY, 40, darkGreen);
+        DrawText("1 - Easy", textX, textY + 50, 30, darkGreen);
+        DrawText("2 - Medium", textX, textY + 100, 30, darkGreen);
+        DrawText("3 - Hard", textX, textY + 150, 30, darkGreen);
 
         EndDrawing();
 
