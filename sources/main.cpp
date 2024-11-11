@@ -14,6 +14,11 @@ int cellSize = 30;
 int cellCount = 25;
 int offset = 75;
 double lastUpdateTime = 0;
+enum Difficulty { 
+    EASY, 
+    MEDIUM, 
+    HARD
+};
 
 bool eventTriggered(double interval) {
     const double currentTime = GetTime();
@@ -117,11 +122,17 @@ class Game {
 public:
     Snake snake;
     Food food;
-
-    Game() {
+    Difficulty difficulty; 
+    double updateInterval;
+    Game(Difficulty diff) : difficulty(diff) {
         snake = Snake{};
         food = Food{};
-        // food.position = Food::GenerateRandomPos(snake.body);
+        food.position = Food::GenerateRandomPos(snake.body);
+        switch (difficulty) { 
+            case EASY: updateInterval = 0.3; break; 
+            case MEDIUM: updateInterval = 0.2; break; 
+            case HARD: updateInterval = 0.1; break;
+        }
     }
 
     void Draw() {
@@ -142,21 +153,42 @@ public:
         }
     }
 };
+Difficulty ShowDifficultyMenu() {
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(green);
+        DrawText("Select Difficulty", 400, 200, 40, darkGreen);
+        DrawText("1 - Easy", 400, 300, 30, darkGreen);
+        DrawText("2 - Medium", 400, 350, 30, darkGreen);
+        DrawText("3 - Hard", 400, 400, 30, darkGreen);
 
-using namespace std;
+        EndDrawing();
+
+        if (IsKeyPressed(KEY_ONE)) return EASY;
+        if (IsKeyPressed(KEY_TWO)) return MEDIUM;
+        if (IsKeyPressed(KEY_THREE)) return HARD;
+    }
+    return EASY;
+}
 
 int main() {
     // SetRandomSeed(time(nullptr));
-    cout << "Starting the game" << endl;
+    //cout << "Starting the game" << endl;
     InitAudioDevice();
+    InitWindow(cellSize * cellCount + 2 * offset, cellSize * cellCount + 2 * offset, WINDOW_TITLE);
+    SetTargetFPS(120);
+
+    Difficulty difficulty = ShowDifficultyMenu();
+    Game game(difficulty);
+    
     Music music = LoadMusicStream(ASSETS_PATH"KahootLobbyMusic.mp3");
     PlayMusicStream(music);
 
-    auto game = Game{};
+    //auto game = Game{};
 
     // Create entry screen.
-    InitWindow(cellSize * cellCount + 2 * offset, cellSize * cellCount + 2 * offset, WINDOW_TITLE);
-    SetTargetFPS(120);
+    //InitWindow(cellSize * cellCount + 2 * offset, cellSize * cellCount + 2 * offset, WINDOW_TITLE);
+    
 
     // Game loop
     // 1. Event handling
@@ -168,7 +200,7 @@ int main() {
 
         // Drawing
         ClearBackground(green);
-        if (eventTriggered(0.2)) {
+        if (eventTriggered(game.updateInterval)) {
             // moving the snake
             game.Update();
         }
