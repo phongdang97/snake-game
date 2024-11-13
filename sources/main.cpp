@@ -14,6 +14,11 @@ int cellSize = 30;
 int cellCount = 25;
 int offset = 75;
 double lastUpdateTime = 0;
+enum Difficulty { 
+    EASY, 
+    MEDIUM, 
+    HARD
+};
 
 bool eventTriggered(double interval) {
     const double currentTime = GetTime();
@@ -44,6 +49,7 @@ class Snake {
 public:
     deque<Vector2> body = {Vector2{6, 9}, Vector2{5, 9}, Vector2{4, 9}};
     Vector2 direction = {1, 0};
+    bool gameOver = false;
 
     void Draw() {
         for (const auto &i: body) {
@@ -55,9 +61,11 @@ public:
 
 
     void Update(Vector2 foodPos) {
+    
         cout << "Snake: " << body[0].x << " " << body[0].y << endl;
         cout << "Food: " << foodPos.x << " " << foodPos.y << endl;
 
+        if (gameOver) return;
         if (Vector2Equals(foodPos, Vector2Add(body[0], direction))) {
             body.push_front(Vector2Add(body[0], direction));
         } else {
@@ -76,9 +84,17 @@ public:
         if (body[0].y < 0) {
             body[0].y = static_cast<float>(cellCount - 1);
         }
+//check if the snake's head position matches any of its body positions
+        for (size_t i = 1; i < body.size(); ++i) 
+            {
+            if (Vector2Equals(body[0], body[i])) 
+                {
+                    gameOver = true;
+                    break;
+                }
+            }
     }
 };
-
 
 class Food {
 public:
@@ -117,16 +133,28 @@ class Game {
 public:
     Snake snake;
     Food food;
-
-    Game() {
+    Difficulty difficulty; 
+    double updateInterval;
+    Game(Difficulty diff) : difficulty(diff) {
         snake = Snake{};
         food = Food{};
-        // food.position = Food::GenerateRandomPos(snake.body);
+        food.position = Food::GenerateRandomPos(snake.body);
+        switch (difficulty) { 
+            case EASY: updateInterval = 0.3; break; 
+            case MEDIUM: updateInterval = 0.2; break; 
+            case HARD: updateInterval = 0.1; break;
+        }
     }
 
     void Draw() {
         food.Draw();
         snake.Draw();
+        if (snake.gameOver) 
+        {
+            DrawText("Game Over", GetScreenWidth() / 2 - MeasureText("Game Over", 40) / 2, GetScreenHeight() / 2 - 20, 40, RED);
+            DrawText("Press R to Restart or Q to Quit", GetScreenWidth() / 2 - MeasureText("Press R to Restart or Q to Quit", 20) / 2, GetScreenHeight() / 2 + 20, 20, RED);
+            
+        }
     }
 
     void Update() {
@@ -141,22 +169,52 @@ public:
             food.position = Food::GenerateRandomPos(snake.body);
         }
     }
+    void Restart() {
+        snake = Snake{};
+        food.position = Food::GenerateRandomPos(snake.body);
+    }
 };
+Difficulty ShowDifficultyMenu() {
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+    int textWidth = MeasureText("Select Difficulty", 40);
+    int textX = (screenWidth - textWidth) / 2;
+    int textY = screenHeight / 2 - 100;
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(green);
+        DrawText("Select Difficulty", textX, textY, 40, darkGreen);
+        DrawText("1 - Easy", textX, textY + 50, 30, darkGreen);
+        DrawText("2 - Medium", textX, textY + 100, 30, darkGreen);
+        DrawText("3 - Hard", textX, textY + 150, 30, darkGreen);
 
-using namespace std;
+        EndDrawing();
+
+        if (IsKeyPressed(KEY_ONE)) return EASY;
+        if (IsKeyPressed(KEY_TWO)) return MEDIUM;
+        if (IsKeyPressed(KEY_THREE)) return HARD;
+    }
+    return EASY;
+}
 
 int main() {
     // SetRandomSeed(time(nullptr));
-    cout << "Starting the game" << endl;
+    //cout << "Starting the game" << endl;
     InitAudioDevice();
+    InitWindow(cellSize * cellCount + 2 * offset, cellSize * cellCount + 2 * offset, WINDOW_TITLE);
+    SetTargetFPS(120);
+
+    Difficulty difficulty = ShowDifficultyMenu();
+    Game game(difficulty);
+    
     Music music = LoadMusicStream(ASSETS_PATH"KahootLobbyMusic.mp3");
     PlayMusicStream(music);
 
-    auto game = Game{};
+    //auto game = Game{};
 
     // Create entry screen.
-    InitWindow(cellSize * cellCount + 2 * offset, cellSize * cellCount + 2 * offset, WINDOW_TITLE);
-    SetTargetFPS(120);
+    //InitWindow(cellSize * cellCount + 2 * offset, cellSize * cellCount + 2 * offset, WINDOW_TITLE);
+    
 
     // Game loop
     // 1. Event handling
@@ -168,7 +226,7 @@ int main() {
 
         // Drawing
         ClearBackground(green);
-        if (eventTriggered(0.2)) {
+        if (eventTriggered(game.updateInterval)) {
             // moving the snake
             game.Update();
         }
@@ -192,6 +250,14 @@ int main() {
                              darkGreen);
         game.Draw();
 
+        if (game.snake.gameOver) {
+            if (IsKeyPressed(KEY_R)) {
+                game.Restart();
+            }
+            if (IsKeyPressed(KEY_Q)) {
+                break;
+            }
+        }        
         EndDrawing();
     }
     UnloadMusicStream(music);
