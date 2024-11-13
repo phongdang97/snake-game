@@ -49,6 +49,7 @@ class Snake {
 public:
     deque<Vector2> body = {Vector2{6, 9}, Vector2{5, 9}, Vector2{4, 9}};
     Vector2 direction = {1, 0};
+    bool gameOver = false;
 
     void Draw() {
         for (const auto &i: body) {
@@ -60,9 +61,11 @@ public:
 
 
     void Update(Vector2 foodPos) {
+    
         cout << "Snake: " << body[0].x << " " << body[0].y << endl;
         cout << "Food: " << foodPos.x << " " << foodPos.y << endl;
 
+        if (gameOver) return;
         if (Vector2Equals(foodPos, Vector2Add(body[0], direction))) {
             body.push_front(Vector2Add(body[0], direction));
         } else {
@@ -81,9 +84,17 @@ public:
         if (body[0].y < 0) {
             body[0].y = static_cast<float>(cellCount - 1);
         }
+//check if the snake's head position matches any of its body positions
+        for (size_t i = 1; i < body.size(); ++i) 
+            {
+            if (Vector2Equals(body[0], body[i])) 
+                {
+                    gameOver = true;
+                    break;
+                }
+            }
     }
 };
-
 
 class Food {
 public:
@@ -138,6 +149,12 @@ public:
     void Draw() {
         food.Draw();
         snake.Draw();
+        if (snake.gameOver) 
+        {
+            DrawText("Game Over", GetScreenWidth() / 2 - MeasureText("Game Over", 40) / 2, GetScreenHeight() / 2 - 20, 40, RED);
+            DrawText("Press R to Restart or Q to Quit", GetScreenWidth() / 2 - MeasureText("Press R to Restart or Q to Quit", 20) / 2, GetScreenHeight() / 2 + 20, 20, RED);
+            
+        }
     }
 
     void Update() {
@@ -151,6 +168,10 @@ public:
             cout << "Snake is eating" << endl;
             food.position = Food::GenerateRandomPos(snake.body);
         }
+    }
+    void Restart() {
+        snake = Snake{};
+        food.position = Food::GenerateRandomPos(snake.body);
     }
 };
 Difficulty ShowDifficultyMenu() {
@@ -229,6 +250,14 @@ int main() {
                              darkGreen);
         game.Draw();
 
+        if (game.snake.gameOver) {
+            if (IsKeyPressed(KEY_R)) {
+                game.Restart();
+            }
+            if (IsKeyPressed(KEY_Q)) {
+                break;
+            }
+        }        
         EndDrawing();
     }
     UnloadMusicStream(music);
