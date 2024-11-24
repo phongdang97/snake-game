@@ -135,7 +135,9 @@ public:
     Food food;
     Difficulty difficulty; 
     double updateInterval;
-    Game(Difficulty diff) : difficulty(diff) {
+    int score;
+
+    Game(Difficulty diff) : difficulty(diff), score(0) {
         snake = Snake{};
         food = Food{};
         food.position = Food::GenerateRandomPos(snake.body);
@@ -149,6 +151,7 @@ public:
     void Draw() {
         food.Draw();
         snake.Draw();
+        DrawText(TextFormat("Score: %d", score), 10, 10, 20, RED);
         if (snake.gameOver) 
         {
             DrawText("Game Over", GetScreenWidth() / 2 - MeasureText("Game Over", 40) / 2, GetScreenHeight() / 2 - 20, 40, RED);
@@ -167,11 +170,13 @@ public:
         if (Vector2Equals(Vector2Add(snake.body[0], snake.direction), food.position)) {
             cout << "Snake is eating" << endl;
             food.position = Food::GenerateRandomPos(snake.body);
+            score++;
         }
     }
     void Restart() {
         snake = Snake{};
         food.position = Food::GenerateRandomPos(snake.body);
+        score = 0;
     }
 };
 Difficulty ShowDifficultyMenu() {
